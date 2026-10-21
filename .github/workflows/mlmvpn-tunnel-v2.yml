@@ -1,0 +1,58 @@
+# Managed by MLMVPN — GitHub Tunnel v2. Do not edit; MLMVPN overwrites this on update.
+name: mlmvpn-tunnel-v2
+
+on:
+  workflow_dispatch:
+    inputs:
+      session_id:
+        description: 'Session'
+        required: true
+        type: string
+      client_pub:
+        description: 'Client key'
+        required: true
+        type: string
+      xray_version:
+        description: 'Core version'
+        required: false
+        type: string
+        default: '26.9.9'
+      slot:
+        description: 'Stable path'
+        required: false
+        type: string
+        default: ''
+      exits:
+        description: 'Exit countries'
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  cloud-session:
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: agent
+      - name: Cloud session
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SESSION_ID: ${{ inputs.session_id }}
+          CLIENT_PUB: ${{ inputs.client_pub }}
+          XRAY_VERSION: ${{ inputs.xray_version }}
+          KEEP_ALIVE_MINUTES: '335'
+          # The stable tunnel (github-tunnel/gt-slots.js): which slot this session runs, and the
+          # connector tokens as repository secrets — masked in logs, empty when never set.
+          SLOT: ${{ inputs.slot }}
+          # The exit countries the user chose (runner/exits.mjs), started as soon as the session is
+          # open so they are ready by the time the client asks. Country codes only — nothing secret.
+          EXITS: ${{ inputs.exits }}
+          GT_SLOT_A: ${{ secrets.GT_SLOT_A }}
+          GT_SLOT_B: ${{ secrets.GT_SLOT_B }}
+          GT_SLOT_C: ${{ secrets.GT_SLOT_C }}
+        run: node agent/gt-agent.mjs
